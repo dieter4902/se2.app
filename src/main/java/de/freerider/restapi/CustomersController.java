@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.StreamSupport;
 
 @RestController
 class CustomersController implements CustomersAPI {
@@ -45,10 +46,10 @@ class CustomersController implements CustomersAPI {
             });
             List<String> list = reader.readValue(arrayNode);
             //
-            re = new ResponseEntity<List<?>>(list, HttpStatus.OK);
+            re = new ResponseEntity<>(list, HttpStatus.OK);
 
         } catch (IOException e) {
-            re = new ResponseEntity<List<?>>(HttpStatus.INTERNAL_SERVER_ERROR);
+            re = new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
         return re;
     }
@@ -56,16 +57,28 @@ class CustomersController implements CustomersAPI {
     @Override
     public ResponseEntity<?> getCustomer(long id) {
 
-        ResponseEntity<?> res = new ResponseEntity<String>(HttpStatus.NOT_FOUND);
+        Optional<JsonNode> jn = StreamSupport.stream(peopleAsJSON().spliterator(), false).filter(person -> Long.parseLong(String.valueOf(person.get("id"))) == id).findFirst();
+        return jn.isPresent() ? new ResponseEntity<>(jn, HttpStatus.OK) : new ResponseEntity<String>(HttpStatus.NOT_FOUND);
+
+/*
+        for (JsonNode jon : peopleAsJSON()) {
+            if (id == Long.parseLong(String.valueOf(jon.get("id")))) {
+                re = new ResponseEntity<>(jon, HttpStatus.OK);
+                break;
+            }
+        }
+        return re;
+
         System.err.println(request.getMethod() + " " + request.getRequestURI());
         if (userCount >= id) {
             Optional<Person> person = people.stream().filter(pers -> pers.id == id).findFirst();
             if (person.isPresent()) {
                 ObjectNode objectNode = personAsJson(person);
-                res = new ResponseEntity<>(objectNode.toString(), HttpStatus.OK);
+                re = new ResponseEntity<>(objectNode.toString(), HttpStatus.OK);
             }
         }
-        return res;
+        return re;
+*/
     }
 
 
@@ -120,6 +133,7 @@ class CustomersController implements CustomersAPI {
             this.contacts.add(contact);
             return this;
         }
+
     }
 
     private final CustomersController.Person eric = new CustomersController.Person()
