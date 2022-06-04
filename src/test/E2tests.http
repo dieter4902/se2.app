@@ -1,0 +1,40 @@
+GET http://localhost:8080/api/v1/customers
+
+###
+DELETE http://localhost:8080/api/v1/customers/2
+
+###
+DELETE http://localhost:8080/api/v1/customers/2
+
+###
+GET http://localhost:8080/api/v1/customers
+
+###
+POST http://localhost:8080/api/v1/customers
+Content-Type: application/json
+
+[
+  {
+    "id": "4",
+    "name": "Schiller",
+    "first": "Anja",
+    "contacts": "anja@gmail.com; +152 349-23540; (020) 2315-1261366"
+  }
+]
+
+###
+POST http://localhost:8080/api/v1/customers
+Content-Type: application/json
+
+[
+  {
+    "name": "Ming",
+    "first": "Ma"
+  },
+  {
+    "name": "Xi",
+    "first": "Chiao",
+    "contacts": "chiao@alicon.cn;+86-4203986123"
+  }
+]
+

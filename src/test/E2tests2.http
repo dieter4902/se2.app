@@ -1,0 +1,69 @@
+###3 kunden
+GET http://localhost:8080/api/v1/customers
+
+### status 200
+POST http://localhost:8080/api/v1/customers
+Content-Type: application/json
+
+[
+  {
+    "id": "4",
+    "name": "Schiller",
+    "first": "Anja",
+    "contacts": "anja@gmail.com; +152 349-23540; (020) 2315-1261366"
+  }
+]
+
+### status 409
+POST http://localhost:8080/api/v1/customers
+Content-Type: application/json
+
+[
+  {
+    "id": "4",
+    "name": "Schiller",
+    "first": "Anja",
+    "contacts": "anja@gmail.com; +152 349-23540; (020) 2315-1261366"
+  }
+]
+
+###4 kunden
+GET http://localhost:8080/api/v1/customers
+
+###status 201
+POST http://localhost:8080/api/v1/customers
+Content-Type: application/json
+
+[
+  {
+    "name": "Ming",
+    "first": "Ma"
+  },
+  {
+    "name": "Xi",
+    "first": "Chiao",
+    "contacts": "chiao@alicon.cn;+86-4203986123"
+  }
+]
+
+###6 kunden
+GET http://localhost:8080/api/v1/customers
+
+###status 400... TODO
+POST http://localhost:8080/api/v1/customers
+Content-Type: application/json
+
+[
+  {
+    "first": "Fu"
+  }
+]
+
+###202
+DELETE http://localhost:8080/api/v1/customers/2
+
+###5 kunden
+GET http://localhost:8080/api/v1/customers
+
+###not found
+DELETE http://localhost:8080/api/v1/customers/2
