@@ -18,13 +18,15 @@ public class CustomerRepository implements CrudRepository<Customer, Long> {
     }
 
     @Override
-    public <S extends Customer> S save(S entity) {
+    public <S extends Customer> S save(S entity) throws IllegalArgumentException {
+        checkIfSingleNull(entity);
         CustomerList.putIfAbsent(entity.getId(), entity);
         return entity;
     }
 
     @Override
-    public <S extends Customer> Iterable<S> saveAll(Iterable<S> entities) {
+    public <S extends Customer> Iterable<S> saveAll(Iterable<S> entities) throws IllegalArgumentException {
+        checkIfSingleNull(entities);
         for (S entity : entities) {
             save(entity);
         }
@@ -32,7 +34,8 @@ public class CustomerRepository implements CrudRepository<Customer, Long> {
     }
 
     @Override
-    public boolean existsById(Long aLong) {
+    public boolean existsById(Long aLong) throws IllegalArgumentException {
+        checkIfSingleNull(aLong);
         Customer c = CustomerList.get(aLong);
         return c != null;
     }
@@ -49,7 +52,8 @@ public class CustomerRepository implements CrudRepository<Customer, Long> {
     }
 
     @Override
-    public Optional<Customer> findById(Long aLong) {
+    public Optional<Customer> findById(Long aLong) throws IllegalArgumentException {
+        checkIfSingleNull(aLong);
         Customer c = CustomerList.get(aLong);
         return c == null ? Optional.empty() : Optional.of(c);
     }
@@ -60,7 +64,8 @@ public class CustomerRepository implements CrudRepository<Customer, Long> {
     }
 
     @Override
-    public Iterable<Customer> findAllById(Iterable<Long> longs) {
+    public Iterable<Customer> findAllById(Iterable<Long> longs) throws IllegalArgumentException {
+        checkIfSingleNull(longs);
         List<Customer> customers = new ArrayList<>();
         for (Long id : longs) {
             Optional<Customer> customer = findById(id);
@@ -75,27 +80,35 @@ public class CustomerRepository implements CrudRepository<Customer, Long> {
     }
 
     @Override
-    public void deleteById(Long aLong) {
+    public void deleteById(Long aLong) throws IllegalArgumentException {
+        checkIfSingleNull(aLong);
         CustomerList.remove(aLong);
     }
 
     @Override
-    public void delete(Customer entity) {
+    public void delete(Customer entity) throws IllegalArgumentException {
+        checkIfSingleNull(entity);
         deleteById(entity.getId());
     }
 
     @Override
-    public void deleteAllById(Iterable<? extends Long> longs) {
+    public void deleteAllById(Iterable<? extends Long> longs) throws IllegalArgumentException {
+        checkIfSingleNull(longs);
         for (Long id : longs) {
             deleteById(id);
         }
     }
 
     @Override
-    public void deleteAll(Iterable<? extends Customer> entities) {
+    public void deleteAll(Iterable<? extends Customer> entities) throws IllegalArgumentException {
+        checkIfSingleNull(entities);
         for (Customer customer : entities) {
             delete(customer);
         }
+    }
+
+    private void checkIfSingleNull(Object o) throws IllegalArgumentException {
+        if (o == null) throw new IllegalArgumentException();
     }
 
     @Override

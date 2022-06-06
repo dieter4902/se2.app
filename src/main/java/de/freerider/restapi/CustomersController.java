@@ -73,26 +73,36 @@ class CustomersController implements CustomersAPI {
         if (jsonMap == null) {
             return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
         }
-        System.out.println("[{");
-        for (Map<String, Object> kvpairs : jsonMap) {
-            Optional<Customer> customer = accept(kvpairs);
-            if (customer.isPresent()) {
-                customerRepository.save(customer.get());
-            } else {
-                return new ResponseEntity<>(null, HttpStatus.CONFLICT);
+
+        try {
+            System.out.println("[{");
+            for (Map<String, Object> kvpairs : jsonMap) {
+
+                Optional<Customer> customer = accept(kvpairs);
+                if (customer.isPresent()) {
+                    customerRepository.save(customer.get());
+                } else {
+                    return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+                }
+                kvpairs.keySet().forEach(key -> {
+                    Object value = kvpairs.get(key);
+                    System.out.println(" [" + key + ", " + value + " ]");
+                });
             }
-            kvpairs.keySet().forEach(key -> {
-                Object value = kvpairs.get(key);
-                System.out.println(" [" + key + ", " + value + " ]");
-            });
+            System.out.println("]}");
+        }catch (IllegalArgumentException e){
+            return new ResponseEntity<>(null, HttpStatus.CONFLICT);
         }
-        System.out.println("]}");
+
         return new ResponseEntity<>(null, HttpStatus.CREATED);
     }
 
-    private Optional<Customer> accept(Map<String, Object> customerMap) {
+    private Optional<Customer> accept(Map<String, Object> customerMap) throws IllegalArgumentException {
         String sId = (String) customerMap.getOrDefault("id", null);
         long id = (sId == null ? customerRepository.getFreeID() : Long.parseLong(sId));
+        if (id <= 0 || customerRepository.existsById(id)) {
+            throw new IllegalArgumentException("id already exists");
+        }
         String first = (String) customerMap.getOrDefault("first", null);
         String name = (String) customerMap.getOrDefault("name", null);
         String[] contacts = ((String) customerMap.getOrDefault("contacts", "")).split(";");
@@ -104,6 +114,7 @@ class CustomersController implements CustomersAPI {
                 .setName(first, name);
         Arrays.stream(contacts).forEach(customer::addContact);
         return Optional.of(customer);
+
     }
 
     @Override
