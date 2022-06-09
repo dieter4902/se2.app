@@ -16,10 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @RestController
 class CustomersController implements CustomersAPI {
@@ -74,24 +71,24 @@ class CustomersController implements CustomersAPI {
             return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
         }
 
-        try {
-            System.out.println("[{");
-            for (Map<String, Object> kvpairs : jsonMap) {
+        List<Collection<Object>> rejected = new ArrayList<>();
+        System.out.println("[{");
+        for (Map<String, Object> kvpairs : jsonMap) {
 
-                Optional<Customer> customer = accept(kvpairs);
-                if (customer.isPresent()) {
-                    customerRepository.save(customer.get());
-                } else {
-                    return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-                }
-                kvpairs.keySet().forEach(key -> {
-                    Object value = kvpairs.get(key);
-                    System.out.println(" [" + key + ", " + value + " ]");
-                });
+            Optional<Customer> customer = accept(kvpairs);
+            if (customer.isPresent()) {
+                customerRepository.save(customer.get());
+            } else {
+                rejected.add(kvpairs.values());
             }
-            System.out.println("]}");
-        }catch (IllegalArgumentException e){
-            return new ResponseEntity<>(null, HttpStatus.CONFLICT);
+            kvpairs.keySet().forEach(key -> {
+                Object value = kvpairs.get(key);
+                System.out.println(" [" + key + ", " + value + " ]");
+            });
+        }
+        System.out.println("]}");
+        if (rejected.size() > 0) {
+            return new ResponseEntity<>(rejected, HttpStatus.CONFLICT);
         }
 
         return new ResponseEntity<>(null, HttpStatus.CREATED);
@@ -101,17 +98,17 @@ class CustomersController implements CustomersAPI {
         String sId = (String) customerMap.getOrDefault("id", null);
         long id = (sId == null ? customerRepository.getFreeID() : Long.parseLong(sId));
         if (id <= 0 || customerRepository.existsById(id)) {
-            throw new IllegalArgumentException("id already exists");
+            return Optional.empty();
         }
         String first = (String) customerMap.getOrDefault("first", null);
         String name = (String) customerMap.getOrDefault("name", null);
-        String[] contacts = ((String) customerMap.getOrDefault("contacts", "")).split(";");
-        if (id <= 0 || customerRepository.existsById(id) || first == null || name == null) {
+        if (first == null || name == null) {
             return Optional.empty();
         }
         Customer customer = new Customer()
                 .setId(id)
                 .setName(first, name);
+        String[] contacts = ((String) customerMap.getOrDefault("contacts", "")).split(";");
         Arrays.stream(contacts).forEach(customer::addContact);
         return Optional.of(customer);
 
