@@ -71,24 +71,33 @@ class CustomersController implements CustomersAPI {
             return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
         }
 
-        List<Collection<Object>> rejected = new ArrayList<>();
+        List<Collection<Object>> badReq = new ArrayList<>();
+        List<Collection<Object>> conflict = new ArrayList<>();
         System.out.println("[{");
         for (Map<String, Object> kvpairs : jsonMap) {
 
-            Optional<Customer> customer = accept(kvpairs);
-            if (customer.isPresent()) {
-                customerRepository.save(customer.get());
-            } else {
-                rejected.add(kvpairs.values());
+            try {
+                Optional<Customer> customer = accept(kvpairs);
+                if (customer.isPresent()) {
+                    customerRepository.save(customer.get());
+                } else {
+                    conflict.add(kvpairs.values());
+                }
+                kvpairs.keySet().forEach(key -> {
+                    Object value = kvpairs.get(key);
+                    System.out.println(" [" + key + ", " + value + " ]");
+                });
+            } catch (IllegalArgumentException e) {
+                badReq.add(kvpairs.values());
             }
-            kvpairs.keySet().forEach(key -> {
-                Object value = kvpairs.get(key);
-                System.out.println(" [" + key + ", " + value + " ]");
-            });
         }
         System.out.println("]}");
-        if (rejected.size() > 0) {
-            return new ResponseEntity<>(rejected, HttpStatus.CONFLICT);
+        if (badReq.size() > 0) {
+            badReq.addAll(conflict);
+            return new ResponseEntity<>(badReq, HttpStatus.BAD_REQUEST);
+        }
+        if (conflict.size() > 0) {
+            return new ResponseEntity<>(conflict, HttpStatus.CONFLICT);
         }
 
         return new ResponseEntity<>(null, HttpStatus.CREATED);
@@ -97,13 +106,16 @@ class CustomersController implements CustomersAPI {
     private Optional<Customer> accept(Map<String, Object> customerMap) throws IllegalArgumentException {
         String sId = (String) customerMap.getOrDefault("id", null);
         long id = (sId == null ? customerRepository.getFreeID() : Long.parseLong(sId));
-        if (id <= 0 || customerRepository.existsById(id)) {
+
+        System.out.println(customerRepository.existsById(id));
+        if (id <= 0 || (sId == null && customerRepository.existsById(id))) {
             return Optional.empty();
         }
         String first = (String) customerMap.getOrDefault("first", null);
         String name = (String) customerMap.getOrDefault("name", null);
+
         if (first == null || name == null) {
-            return Optional.empty();
+            throw new IllegalArgumentException();
         }
         Customer customer = new Customer()
                 .setId(id)

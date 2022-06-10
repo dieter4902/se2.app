@@ -41,14 +41,14 @@ public class CustomerRepository implements CrudRepository<Customer, Long> {
     }
 
     public Long getFreeID() {
-        long prev = 0L;
-        for (Long l : CustomerList.keySet()) {
-            prev += 1;
-            if (prev + 1 < l) {
-                break;
+        long val = 0L;
+        for (Customer customer : CustomerList.values()) {
+            val += 1;
+            if (val < customer.getId()) {
+                return val;
             }
         }
-        return prev + 1;
+        return val + 1;
     }
 
     @Override
