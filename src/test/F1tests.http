@@ -1,0 +1,68 @@
+###a) GET ALL - Anzeige aller in der DB vorhandenen Datensätze in der externen Darstellung (DTO).
+GET http://localhost:8080/api/v1/customers
+
+###b) GET ONE - Datensatzes mit einem existierenden ID
+GET http://localhost:8080/api/v1/customers/1
+
+###b) GET ONE - fail mit 404, id existiert nicht
+GET http://localhost:8080/api/v1/customers/11111
+
+###c) POST – neuen Datensatz als JSON posten;
+POST http://localhost:8080/api/v1/customers
+Content-Type: application/json
+
+[
+  {
+    "name": "Customer",
+    "first": "Neuer",
+    "contacts": "+1577 1234567"
+  }
+]
+
+### GET.
+GET http://localhost:8080/api/v1/customers
+
+###d) POST (fail) – Versuch, neuen Datensatz mit existierendem ID zu posten (409 conflict ).
+POST http://localhost:8080/api/v1/customers
+Content-Type: application/json
+
+[
+  {
+    "id": "1",
+    "name": "Cuseeetomer",
+    "first": "Neuer",
+    "contacts": "+1577 1234567"
+  }
+]
+
+###e) PUT – Aktualisieren Sie: „Anne“ ‐‐> „Anna“
+PUT http://localhost:8080/api/v1/customers
+Content-Type: application/json
+
+[
+  {
+    "id": "1",
+    "first": "Anna"
+  }
+]
+
+###GET und SELECT zeigen die Aktualisierung.
+GET http://localhost:8080/api/v1/customers
+
+###f) PUT (fail) – Versuch, Datensatz mit nicht‐ex. ID zu aktualisieren (404 not found), DB unverändert.
+PUT http://localhost:8080/api/v1/customers
+Content-Type: application/json
+
+[
+  {
+    "id": "1123123123",
+    "name": "Schiller",
+    "first": "Anja"
+  }
+]
+
+###g) DELETE – Löschen Sie den Datensatz mit ID: 3; GET und SELECT zeigen ihn nicht mehr an.
+DELETE http://localhost:8080/api/v1/customers/2
+
+###h) DELETE (fail) – Versuch, Datensatz mit nicht‐ex. ID zu löschen (404 not found ), DB unverändert.
+DELETE http://localhost:8080/api/v1/customers/2

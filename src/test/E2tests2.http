@@ -7,7 +7,7 @@ Content-Type: application/json
 
 [
   {
-    "id": "4",
+    "id": "2",
     "name": "Schiller",
     "first": "Anja",
     "contacts": "anja@gmail.com; +152 349-23540; (020) 2315-1261366"
@@ -20,7 +20,7 @@ Content-Type: application/json
 
 [
   {
-    "id": "2",
+    "id": "1",
     "name": "Schiller",
     "first": "Anja",
     "contacts": "anja@gmail.com; +152 349-23540; (020) 2315-1261366"
@@ -67,3 +67,15 @@ GET http://localhost:8080/api/v1/customers
 
 ###not found
 DELETE http://localhost:8080/api/v1/customers/2
+
+### status 409
+PUT http://localhost:8080/api/v1/customers
+Content-Type: application/json
+
+[
+  {
+    "id": "1",
+    "name": "Schiller",
+    "first": "Anja"
+  }
+]

@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import de.freerider.datamodel.Customer;
+import de.freerider.repository.CustomerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
@@ -42,8 +43,14 @@ class CustomersController implements CustomersAPI {
             ArrayNode arrayNode = objectMapper.createArrayNode();
             customerRepository.findAll().forEach(c -> {
                 StringBuffer sb = new StringBuffer();
-                c.getContacts().forEach(contact -> sb.append(sb.length() == 0 ? "" : "; ").append(contact));
-                arrayNode.add(objectMapper.createObjectNode().put("id", c.getId()).put("name", c.getLastName()).put("first", c.getFirstName()).put("contacts", sb.toString()));
+                c.getContacts().forEach(contact -> {
+                    sb.append(sb.length() == 0 ? "" : "; ").append(contact);
+                });
+                arrayNode.add(objectMapper.createObjectNode()
+                        .put("id", c.getId())
+                        .put("name", c.getLastName())
+                        .put("first", c.getFirstName())
+                        .put("contacts", sb.toString()));
             });
             ObjectReader reader = objectMapper.readerFor(new TypeReference<List<ObjectNode>>() {
             });
@@ -104,10 +111,8 @@ class CustomersController implements CustomersAPI {
 
     private Optional<Customer> accept(Map<String, Object> customerMap) throws IllegalArgumentException {
         String sId = (String) customerMap.getOrDefault("id", null);
-        long id = (sId == null ? customerRepository.getFreeID() : Long.parseLong(sId));
-
-        System.out.println(customerRepository.existsById(id));
-        if (id <= 0 || (sId == null && customerRepository.existsById(id))) {
+        long id = (sId == null ? getFreeId() : Long.parseLong(sId));
+        if (id <= 0 || customerRepository.existsById(id)) {
             return Optional.empty();
         }
         String first = (String) customerMap.getOrDefault("first", null);
@@ -125,9 +130,51 @@ class CustomersController implements CustomersAPI {
 
     }
 
+    private long getFreeId() {
+        for (long i = 1L; true; i++) {
+            if (!customerRepository.existsById(i)) {
+                System.out.println("getFreeId :" + i);
+                return i;
+            }
+        }
+    }
+
     @Override
     public ResponseEntity<List<?>> putCustomers(Map<String, Object>[] jsonMap) {
-        return null;
+
+        List<Collection<Object>> badReq = new ArrayList<>();
+        List<Collection<Object>> notFound = new ArrayList<>();
+
+        for (Map<String, Object> kvpairs : jsonMap) {
+            if (kvpairs.get("id") == null) {
+                badReq.add(kvpairs.values());
+                continue;
+            }
+            long id = Long.parseLong((String) kvpairs.get("id"));
+            if (!customerRepository.existsById(id)) {
+                notFound.add(kvpairs.values());
+                continue;
+            }
+
+            Optional<Customer> customer = customerRepository.findById(id);
+            if (customer.isPresent()) {
+                Customer c = customer.get();
+                String first = (String) kvpairs.get("first");
+                String name = (String) kvpairs.get("name");
+                if (first == null) first = c.getFirstName();
+                if (name == null) name = c.getLastName();
+                c.setName(first, name);
+                customerRepository.save(c);
+            }
+        }
+        if (badReq.size() > 0) {
+            badReq.addAll(notFound);
+            return new ResponseEntity<>(badReq, HttpStatus.BAD_REQUEST);
+        }
+        if (notFound.size() > 0) {
+            return new ResponseEntity<>(notFound, HttpStatus.NOT_FOUND);
+        }
+        return new ResponseEntity<>(null, HttpStatus.ACCEPTED);
     }
 
     @Override
